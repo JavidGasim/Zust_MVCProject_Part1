@@ -1,5 +1,6 @@
-﻿﻿{
-@Layout = null;
+﻿@model LoginViewModel
+@{
+    Layout = null;
 }
 
 <!doctype html>
@@ -29,23 +30,10 @@
 
     <title>Zust - Social Community & Marketplace HTML Template</title>
 
-    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <link rel="icon" type="image/png" href="/images/favicon.png">
 </head>
 
 <body>
-
-    <!-- Start Preloader Area -->
-    @* <div class="preloader-area">
-    <div class="spinner">
-    <div class="inner">
-    <div class="disc"></div>
-    <div class="disc"></div>
-    <div class="disc"></div>
-    </div>
-    </div>
-    </div> *@
-    <!-- End Preloader Area -->
-    <!-- Start Preloader Area -->
     <div class="profile-authentication-area">
         <div class="container">
             <div class="row">
@@ -53,43 +41,56 @@
                     <div class="profile-authentication-image">
                         <div class="content-image">
                             <div class="logo">
-                                <a href="index.html"><img src="assets/images/logo.png" alt="Zust"></a>
+                                <a href="/Home/Index"><img src="/images/logo.png" alt="Zust"></a>
                             </div>
                             <div class="vector-image">
-                                <img src="assets/images/vector.png" alt="image">
+                                <img src="/images/vector.png" alt="image">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-lg-6 col-md-12">
+                <div class="col-lg-6 col-md-12" style="margin-top:100px!important">
                     <div class="login-form">
                         <h2>Login</h2>
 
-                        <form>
+                        <form asp-controller="Account" asp-action="Login" method="post" role="form">
                             <div class="form-group">
-                                <label>Username or email</label>
-                                <input type="text" class="form-control">
+                                <label asp-for="Username"></label>
+                                <input asp-for="Username" class="form-control" />
+                                <span asp-validation-for="Username"></span>
+
                             </div>
 
                             <div class="form-group">
-                                <label>Password</label>
-                                <input type="password" class="form-control">
+                                <label asp-for="Password"></label>
+                                <input asp-for="Password" class="form-control" />
+                                <span asp-validation-for="Password"></span>
+
                             </div>
 
-                            <div class="remember-me-wrap d-flex justify-content-between align-items-center">
-                                <p>
-                                    <input type="checkbox" id="test1">
-                                    <label for="test1">Remember me</label>
-                                </p>
-
-                                <div class="lost-your-password-wrap">
-                                    <a href="forgot-password.html" class="lost-your-password">Forgot password ?</a>
+                            <div class="input-group">
+                                <div class="checkbox">
+                                    <label>
+                                        <input asp-for="RememberMe" /> Remember Me
+                                    </label>
                                 </div>
                             </div>
-                            <button type="submit" class="default-btn">Login</button>
-                            <div class="or-text"><span>Or</span></div>
-                            <button type="submit" class="google-btn">Log In with Google</button>
+
+                            <div class="form-group">
+                                <input type="submit" class="default-btn" value="Login" />
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-md-12 control">
+                                    <div style="border-top:1px solid #888;padding-top:15px;font-size:1.5em">
+                                        Don't have an account!
+                                        <a asp-controller="Account" asp-action="Register" style="color:blue;">
+                                            Register Here
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -97,14 +98,14 @@
         </div>
 
         <div class="home-btn-icon">
-            <a href="index.html"><i class="flaticon-home"></i></a>
+            <a href="/Home/Index"><i class="flaticon-home"></i></a>
         </div>
+
     </div>
-    <!-- End Preloader Area -->
-    <!-- Links of JS files -->
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    @* @await RenderSectionAsync("Scripts", required: false) *@
+
 </body>
 </html>
