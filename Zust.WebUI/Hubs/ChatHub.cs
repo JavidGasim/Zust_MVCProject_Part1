@@ -41,5 +41,15 @@ namespace Zust.WebUI.Hubs
             await Clients.Others.SendAsync("Disconnect", info);
 
         }
+
+        public async Task SendFollow(string id)
+        {
+            await Clients.User(id).SendAsync("ReceiveNotification");
+        }
+
+        public async Task GetMessages(string receiverId, string senderId)
+        {
+            await Clients.Users(new String[] { receiverId, senderId }).SendAsync("ReceiveMessages", receiverId, senderId);
+        }
     }
 }

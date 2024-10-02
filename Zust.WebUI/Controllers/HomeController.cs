@@ -1,5 +1,11 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using Zust.Business.Services.Abstracts;
+using Zust.DataAccess.Data;
+using Zust.Entities.Entities;
+using Zust.WebUI.Migrations;
 using Zust.WebUI.Models;
 
 namespace Zust.WebUI.Controllers
@@ -7,15 +13,266 @@ namespace Zust.WebUI.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
+        private readonly UserManager<CustomIdentityUser> _userManager;
+        private readonly ICustomIdentityUserService _customIdentityUserService;
+        private readonly IFriendService _friendService;
+        private readonly IFriendRequestService _friendRequestService;
+        private readonly IChatService _chatService;
+        private readonly IMessageService _messageService;
+        private readonly ZustDbContext _context;
+        public HomeController(ILogger<HomeController> logger, UserManager<CustomIdentityUser> userManager, ICustomIdentityUserService customIdentityUserService, IFriendService friendService, IFriendRequestService friendRequestService, IChatService chatService, IMessageService messageService, ZustDbContext context)
         {
             _logger = logger;
+            _userManager = userManager;
+            _customIdentityUserService = customIdentityUserService;
+            _friendService = friendService;
+            _friendRequestService = friendRequestService;
+            _chatService = chatService;
+            _messageService = messageService;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            ViewBag.User = user;
+
             return View();
+        }
+
+        //public async Task<IActionResult> GetAllFriends()
+        //{
+        //    var user = await _userManager.GetUserAsync(HttpContext.User);
+        //    var requests = await _friendRequestService.GetAllAsync();
+        //    var datas = await _customIdentityUserService.GetAllAsync();
+        //    var myRequests = requests.Where(r => r.SenderId == user.Id);
+        //    var friends = await _friendService.GetAllAsync();
+        //    var myFriends = friends.Where(f => f.OwnId == user.Id || f.YourFriendId == user.Id);
+
+        //    var friendUsers = datas
+        //    .Where(u => myFriends.Any(f => f.OwnId == u.Id || f.YourFriendId == u.Id) && u.Id != user.Id)
+        //    .Select(u => new CustomIdentityUser
+        //    {
+        //        Id = u.Id,
+        //        IsOnline = u.IsOnline,
+        //        UserName = u.UserName,
+        //        Image = u.Image,
+        //        Email = u.Email
+        //    })
+        //    .ToList();
+
+        //    return Ok(friendUsers);
+        //}
+        public async Task<IActionResult> GetAllUsersForLayout()
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var requests = await _friendRequestService.GetAllAsync();
+            var datas = await _customIdentityUserService.GetAllAsync();
+            var myRequests = requests.Where(r => r.SenderId == user.Id);
+            var friends = await _friendService.GetAllAsync();
+            var myFriends = friends.Where(f => f.OwnId == user.Id || f.YourFriendId == user.Id);
+            var users = datas
+                .Where(u => u.Id != user.Id)
+                .OrderByDescending(u => u.IsOnline)
+                .Select(u => new CustomIdentityUser
+                {
+                    Id = u.Id,
+                    HasRequestPending = (myRequests.FirstOrDefault(r => r.ReceiverId == u.Id && r.Status == "Request") != null),
+                    IsFriend = myFriends.FirstOrDefault(f => f.OwnId == u.Id || f.YourFriendId == u.Id) != null,
+                    IsOnline = u.IsOnline,
+                    UserName = u.UserName,
+                    Image = u.Image,
+                    Email = u.Email,
+
+                }).ToList();
+
+            return Ok(users);
+        }
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var requests = await _friendRequestService.GetAllAsync();
+            var datas = await _customIdentityUserService.GetAllAsync();
+            var myRequests = requests.Where(r => r.SenderId == user.Id);
+            var friends = await _friendService.GetAllAsync();
+            var myFriends = friends.Where(f => f.OwnId == user.Id || f.YourFriendId == user.Id);
+            var users = datas
+                .Where(u => u.Id != user.Id)
+                .OrderByDescending(u => u.IsOnline)
+                .Select(u => new CustomIdentityUser
+                {
+                    Id = u.Id,
+                    HasRequestPending = (myRequests.FirstOrDefault(r => r.ReceiverId == u.Id && r.Status == "Request") != null),
+                    IsFriend = myFriends.FirstOrDefault(f => f.OwnId == u.Id || f.YourFriendId == u.Id) != null,
+                    IsOnline = u.IsOnline,
+                    UserName = u.UserName,
+                    Image = u.Image,
+                    Email = u.Email,
+
+                }).Where(u => u.IsFriend == false).ToList();
+
+            return Ok(users);
+        }
+
+        public async Task<IActionResult> SendFollow(string id)
+        {
+            var sender = await _userManager.GetUserAsync(HttpContext.User);
+            var receiverUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (receiverUser != null)
+            {
+                await _friendRequestService.AddAsync(new FriendRequest
+                {
+                    Content = $"{sender.UserName} sent friend request at {DateTime.Now.ToLongDateString()}",
+                    SenderId = sender.Id,
+                    Sender = sender,
+                    ReceiverId = id,
+                    Status = "Request"
+                });
+
+                return Ok();
+
+            }
+
+            return BadRequest();
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> TakeRequest(string id)
+        {
+            var current = await _userManager.GetUserAsync(HttpContext.User);
+            var friendRequests = await _friendRequestService.GetAllAsync();
+            var request = friendRequests.FirstOrDefault(r => r.SenderId == current.Id && r.ReceiverId == id);
+
+            if (request == null) return NotFound();
+            await _friendRequestService.DeleteAsync(request);
+
+            return Ok();
+        }
+
+        public async Task<IActionResult> GetAllRequests()
+        {
+            var current = await _userManager.GetUserAsync(HttpContext.User);
+            var friendRequests = await _friendRequestService.GetAllAsync();
+            var requests = friendRequests.Where(r => r.ReceiverId == current.Id);
+
+            return Ok(requests);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DeclineRequest(int id, string senderid)
+        {
+            try
+            {
+                var current = await _userManager.GetUserAsync(HttpContext.User);
+                var friendRequests = await _friendRequestService.GetAllAsync();
+                var request = friendRequests.FirstOrDefault(f => f.Id == id);
+                await _friendRequestService.DeleteAsync(request);
+
+                await _friendRequestService.AddAsync(new FriendRequest
+                {
+                    Content = $"{current.UserName} declined your friend request at {DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString}",
+                    SenderId = current.Id,
+                    Sender = current,
+                    ReceiverId = senderid,
+                    Status = "Notification"
+                });
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AcceptRequest(string userId, string senderId, int requestId)
+        {
+            var receiverUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var sender = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == senderId);
+
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var chat = await _context.Chats.Include(nameof(Chat.Messages)).FirstOrDefaultAsync(c => c.SenderId == user.Id && c.ReceiverId == receiverUser.Id || c.ReceiverId == user.Id && c.SenderId == receiverUser.Id);
+
+            if (receiverUser != null)
+            {
+                await _friendRequestService.AddAsync(new FriendRequest
+                {
+                    Content = $"{sender.UserName} accepted friend request at ${DateTime.Now.ToLongDateString()} ${DateTime.Now.ToShortTimeString()}",
+                    SenderId = senderId,
+                    ReceiverId = receiverUser.Id,
+                    Sender = sender,
+                    Status = "Notification"
+                });
+
+                var friendRequests = await _friendRequestService.GetAllAsync();
+                var request = friendRequests.FirstOrDefault(r => r.Id == requestId);
+                await _friendRequestService.DeleteAsync(request);
+
+                await _friendService.AddAsync(new Friend
+                {
+                    OwnId = sender.Id,
+                    YourFriendId = receiverUser.Id,
+                });
+
+                await _userManager.UpdateAsync(receiverUser);
+
+                if (chat == null)
+                {
+                    chat = new Chat
+                    {
+                        ReceiverId = receiverUser.Id,
+                        SenderId = user.Id,
+                        Messages = new List<Message>()
+                    };
+
+                    await _context.Chats.AddAsync(chat);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok();
+            }
+
+            return BadRequest();
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteRequest(int id)
+        {
+            try
+            {
+                var friendRequests = await _friendRequestService.GetAllAsync();
+                var request = friendRequests.FirstOrDefault();
+                if (request == null) return NotFound();
+
+                await _friendRequestService.DeleteAsync(request);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> UnfollowUser(string id)
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var friends = await _friendService.GetAllAsync();
+            var friend = friends.FirstOrDefault(f => f.YourFriendId == user.Id && f.OwnId == id || f.OwnId == user.Id && f.YourFriendId == id);
+            var chats = await _chatService.GetAllAsync();
+            var chat = chats.FirstOrDefault(c => c.ReceiverId == friend.YourFriendId && c.SenderId == friend.OwnId || c.ReceiverId == friend.OwnId && c.SenderId == friend.YourFriendId);
+
+
+            if (friend != null)
+            {
+                await _friendService.DeleteAsync(friend);
+                await _chatService.DeleteAsync(chat);
+                return Ok();
+            }
+
+            return NotFound();
+
         }
 
         public IActionResult Privacy()

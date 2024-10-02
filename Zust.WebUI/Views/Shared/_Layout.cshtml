@@ -3,10 +3,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Zust.WebUI</title>
+    <title>@ViewData["Title"] - SocialNetwork.WebUI</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Zust.WebUI.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/SocialNetwork.WebUI.styles.css" asp-append-version="true" />
+
     <link rel="stylesheet" href="~/css/bootsrap.min.css" />
     <link rel="stylesheet" href="~/css/animate.min.css">
     <link rel="stylesheet" href="~/css/remixicon.css">
@@ -25,8 +26,18 @@
     <link rel="icon" type="image/png" href="assets/images/favicon.png">
 </head>
 <body>
+    @* <div class="preloader-area">
+    <div class="spinner">
+    <div class="inner">
+    <div class="disc"></div>
+    <div class="disc"></div>
+    <div class="disc"></div>
+    </div>
+    </div>
+    </div> *@
     <div class="main-content-wrapper d-flex flex-column">
 
+        <!-- Start Navbar Area -->
         <div class="navbar-area">
             <div class="main-responsive-nav">
                 <div class="main-responsive-menu">
@@ -41,7 +52,7 @@
             <div class="main-navbar">
                 <nav class="navbar navbar-expand-lg navbar-light">
                     <a href="index.html" class="navbar-brand d-flex align-items-center">
-                        <img src="assets/images/logo.png" alt="image">
+                        <img src="/images/logo.png" alt="image">
                     </a>
 
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -411,15 +422,15 @@
                                     </button>
                                     <div class="dropdown-menu language-dropdown-menu">
                                         <a class="dropdown-item" href="#">
-                                            <img src="assets/images/uk.png" alt="flag">
+                                            <img src="/images/uk.png" alt="flag">
                                             Eng
                                         </a>
                                         <a class="dropdown-item" href="#">
-                                            <img src="assets/images/china.png" alt="flag">
+                                            <img src="/images/china.png" alt="flag">
                                             简体中文
                                         </a>
                                         <a class="dropdown-item" href="#">
-                                            <img src="assets/images/uae.png" alt="flag">
+                                            <img src="/images/uae.png" alt="flag">
                                             العربيّة
                                         </a>
                                     </div>
@@ -429,7 +440,7 @@
                                 <div class="dropdown profile-nav-item">
                                     <a href="#" class="dropdown-bs-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <div class="menu-profile">
-                                            <img src="assets/images/user/user-1.jpg" class="rounded-circle" alt="image">
+                                            <img src="/images/user-1.jpg" class="rounded-circle" alt="image">
                                             <span class="name">Matthew</span>
                                             <span class="status-online"></span>
                                         </div>
@@ -441,11 +452,11 @@
                                             <a href="mailto:matthew507@gmail.com">matthew507@gmail.com</a>
                                         </div>
                                         <ul class="profile-body">
-                                            <li><i class="flaticon-user"></i> <a href="my-profile.html">My Profile</a></li>
-                                            <li><i class="flaticon-settings"></i> <a href="setting.html">Setting</a></li>
+                                            <li><i class="flaticon-user"></i> <a href="/Profile/Index">My Profile</a></li>
+                                            <li><i class="flaticon-settings"></i> <a href="/Setting/Index">Setting</a></li>
                                             <li><i class="flaticon-privacy"></i> <a href="privacy.html">Privacy</a></li>
                                             <li><i class="flaticon-information"></i> <a href="help-and-support.html">Help & Support</a></li>
-                                            <li><i class="flaticon-logout"></i> <a href="index.html">Logout</a></li>
+                                            <li><i class="flaticon-logout"></i> <a href="/Account/LogOut">Logout</a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -716,11 +727,11 @@
                                                 <a href="mailto:matthew507@gmail.com">matthew507@gmail.com</a>
                                             </div>
                                             <ul class="profile-body">
-                                                <li><i class="flaticon-user"></i> <a href="my-profile.html">My Profile</a></li>
-                                                <li><i class="flaticon-settings"></i> <a href="setting.html">Setting</a></li>
+                                                <li><i class="flaticon-user"></i> <a href="/Profile/Index">My Profile</a></li>
+                                                <li><i class="flaticon-settings"></i> <a href="/Setting/Index">Setting</a></li>
                                                 <li><i class="flaticon-privacy"></i> <a href="privacy.html">Privacy</a></li>
                                                 <li><i class="flaticon-information"></i> <a href="help-and-support.html">Help & Support</a></li>
-                                                <li><i class="flaticon-logout"></i> <a href="index.html">Logout</a></li>
+                                                <li><i class="flaticon-logout"></i> <a href="/NewsFeed/Index">Logout</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -756,13 +767,19 @@
             <div class="sidemenu-body">
                 <ul class="sidemenu-nav metisMenu h-100" id="sidemenu-nav" data-simplebar>
                     <li class="nav-item">
-                        <a href="/NewsFeed/Index" class="nav-link">
-                            <span class="icon"><i class="flaticon-newspaper"></i></span>
-                            <span class="menu-title">News Feed</span>
+                        <a href="/Home/Index" class="nav-link">
+                            <span class="icon"><i class="flaticon-home"></i></span>
+                            <span class="menu-title">HOME</span>
                         </a>
                     </li>
-                    <li class="nav-item active">
-                        <a href="/Message/Chat" class="nav-link">
+                    <li class="nav-item">
+                        <a href="/Notification/Index" class="nav-link">
+                            <span class="icon"><i class="flaticon-newspaper"></i></span>
+                            <span class="menu-title">Notifications</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/Message/GoChat" class="nav-link">
                             <span class="icon"><i class="flaticon-comment-1"></i></span>
                             <span class="menu-title">Messages</span>
                         </a>
@@ -771,19 +788,6 @@
                         <a href="/Friend/Index" class="nav-link">
                             <span class="icon"><i class="flaticon-friends"></i></span>
                             <span class="menu-title">Friends</span>
-                        </a>
-                    </li>
-                    </li> 
-                    <li class="nav-item">
-                        <a href="/Event/Index" class="nav-link">
-                            <span class="icon"><i class="flaticon-calendar"></i></span>
-                            <span class="menu-title">Events</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/LiveChat/Index" class="nav-link">
-                            <span class="icon"><i class="flaticon-live-chat"></i></span>
-                            <span class="menu-title">Live Chat</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -798,132 +802,33 @@
                             <span class="menu-title">Register</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="/NewsFeed/Index" class="nav-link">
+                            <span class="icon"><i class="flaticon-newspaper"></i></span>
+                            <span class="menu-title">News Feed</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/Event/Index" class="nav-link">
+                            <span class="icon"><i class="flaticon-calendar"></i></span>
+                            <span class="menu-title">Events</span>
+                        </a>
+                    </li>
+                    @* <li class="nav-item">
+                    <a href="/LiveChat/Index" class="nav-link">
+                    <span class="icon"><i class="flaticon-live-chat"></i></span>
+                    <span class="menu-title">Live Chat</span>
+                    </a>
+                    </li> *@
                 </ul>
             </div>
         </div>
         <!-- End Sidemenu Area -->
         <!-- Start Right Sidebar Area -->
         <div class="right-sidebar-area" data-simplebar>
-            <div class="recent-chat-box">
-                <div class="title">
-                    <h3>Recent Chat</h3>
-                </div>
-
-                <div class="chat-body" data-simplebar>
-                    <div class="chat-item">
-                        <a href="#"><img src="assets/images/user/user-15.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Stephan Redding</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="chat-item">
-                        <a href="#"><img src="assets/images/user/user-16.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Maria Smith</a></span>
-                        <span class="status-offline"></span>
-                    </div>
-                    <div class="chat-item">
-                        <a href="#"><img src="assets/images/user/user-17.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Paul Enlow</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="chat-item">
-                        <a href="#"><img src="assets/images/user/user-8.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Stephan Redding</a></span>
-                        <span class="status-offline"></span>
-                    </div>
-                    <div class="chat-item">
-                        <a href="#"><img src="assets/images/user/user-9.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Maria Smith</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="chat-item">
-                        <a href="#"><img src="assets/images/user/user-10.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Paul Enlow</a></span>
-                        <span class="status-offline"></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="recent-contact-box">
-                <div class="title">
-                    <h3>Contact</h3>
-                </div>
-                <div class="contact-search-box">
-                    <form>
-                        <input type="text" class="input-search" placeholder="Search">
-                        <button type="submit"><i class="ri-search-line"></i></button>
-                    </form>
-                </div>
-                <div class="contact-body" data-simplebar>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-18.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Karen Williams</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-4.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Mary A. Schwarz</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-20.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Rex Carruth</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-11.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">James Vanwinkle</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-19.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Oscar Thompson</a></span>
-                        <span class="status-offline"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-12.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Harry Lopez</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-21.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Frank S. Arena</a></span>
-                        <span class="status-offline"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-16.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Karen Williams</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-2.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Mary A. Schwarz</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-14.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Rex Carruth</a></span>
-                        <span class="status-offline"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-18.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">James Vanwinkle</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-5.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Oscar Thompson</a></span>
-                        <span class="status-offline"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-6.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Harry Lopez</a></span>
-                        <span class="status-online"></span>
-                    </div>
-                    <div class="contact-item">
-                        <a href="#"><img src="assets/images/user/user-7.jpg" class="rounded-circle" alt="image"></a>
-                        <span class="name"><a href="#">Frank S. Arena</a></span>
-                        <span class="status-offline"></span>
-                    </div>
+            <div class="chat-body" data-simplebar>
+                <div class="chat-item" style="margin:auto;">
+                    @await Component.InvokeAsync("Users")
                 </div>
             </div>
         </div>
