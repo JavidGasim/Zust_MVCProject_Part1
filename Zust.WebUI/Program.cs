@@ -40,6 +40,10 @@ builder.Services.AddScoped<ICommentDAL, CommentDAL>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IPostDAL, PostDAL>();
 builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ILikedPostDAL, LikedPostDAL>();
+builder.Services.AddScoped<ILikedPostService, LikedPostService>();
+builder.Services.AddScoped<ILikedCommentDAL, LikedCommentDAL>();
+builder.Services.AddScoped<ILikedCommentService, LikedCommentService>();
 
 var connection = builder.Configuration.GetConnectionString("Default");
 

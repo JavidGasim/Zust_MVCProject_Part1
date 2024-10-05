@@ -6,14 +6,13 @@ using System.Threading.Tasks;
 
 namespace Zust.Entities.Entities
 {
-    public class Notification
+    public class LikedComment
     {
         public int Id { get; set; }
-        public string? Content { get; set; }
-        public string? Status { get; set; }
         public string? UserId { get; set; }
-        public virtual CustomIdentityUser? User { get; set; }
-        public DateTime? Date { get; set; }
+        public CustomIdentityUser? User { get; set; }
+        public int CommentId { get; set; }
+        public Comment? Comment { get; set; }
 
     }
 }

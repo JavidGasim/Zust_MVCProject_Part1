@@ -20,7 +20,13 @@ namespace Zust.WebUI.Controllers
         private readonly IChatService _chatService;
         private readonly IMessageService _messageService;
         private readonly ZustDbContext _context;
-        public HomeController(ILogger<HomeController> logger, UserManager<CustomIdentityUser> userManager, ICustomIdentityUserService customIdentityUserService, IFriendService friendService, IFriendRequestService friendRequestService, IChatService chatService, IMessageService messageService, ZustDbContext context)
+        private readonly INotificationService _notificationService;
+        private readonly IPostService _postService;
+        private readonly ICommentService _commentService;
+        private readonly ILikedPostService _likedPostService;
+        private readonly ILikedCommentService _likedCommentService;
+
+        public HomeController(ILogger<HomeController> logger, UserManager<CustomIdentityUser> userManager, ICustomIdentityUserService customIdentityUserService, IFriendService friendService, IFriendRequestService friendRequestService, IChatService chatService, IMessageService messageService, ZustDbContext context, INotificationService notificationService, IPostService postService, ICommentService commentService, ILikedPostService likedPostService, ILikedCommentService likedCommentService)
         {
             _logger = logger;
             _userManager = userManager;
@@ -30,6 +36,11 @@ namespace Zust.WebUI.Controllers
             _chatService = chatService;
             _messageService = messageService;
             _context = context;
+            _notificationService = notificationService;
+            _postService = postService;
+            _commentService = commentService;
+            _likedPostService = likedPostService;
+            _likedCommentService = likedCommentService;
         }
 
         public async Task<IActionResult> Index()
@@ -40,29 +51,6 @@ namespace Zust.WebUI.Controllers
             return View();
         }
 
-        //public async Task<IActionResult> GetAllFriends()
-        //{
-        //    var user = await _userManager.GetUserAsync(HttpContext.User);
-        //    var requests = await _friendRequestService.GetAllAsync();
-        //    var datas = await _customIdentityUserService.GetAllAsync();
-        //    var myRequests = requests.Where(r => r.SenderId == user.Id);
-        //    var friends = await _friendService.GetAllAsync();
-        //    var myFriends = friends.Where(f => f.OwnId == user.Id || f.YourFriendId == user.Id);
-
-        //    var friendUsers = datas
-        //    .Where(u => myFriends.Any(f => f.OwnId == u.Id || f.YourFriendId == u.Id) && u.Id != user.Id)
-        //    .Select(u => new CustomIdentityUser
-        //    {
-        //        Id = u.Id,
-        //        IsOnline = u.IsOnline,
-        //        UserName = u.UserName,
-        //        Image = u.Image,
-        //        Email = u.Email
-        //    })
-        //    .ToList();
-
-        //    return Ok(friendUsers);
-        //}
         public async Task<IActionResult> GetAllUsersForLayout()
         {
             var user = await _userManager.GetUserAsync(HttpContext.User);
@@ -136,6 +124,136 @@ namespace Zust.WebUI.Controllers
             return BadRequest();
         }
 
+
+        public async Task<IActionResult> SendComment(int id, string message)
+        {
+            var post = await _postService.GetByIdAsync(id);
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            if (post != null)
+            {
+                var comment = new Comment
+                {
+                    PostId = post.Id,
+                    Post = post,
+                    Content = message,
+                    WritingDate = DateTime.Now,
+                    Sender = user,
+                    SenderId = user.Id,
+                };
+
+                post.CommentCount += 1;
+
+                await _postService.UpdateAsync(post);
+                await _commentService.AddAsync(comment);
+            }
+
+            return Ok();
+        }
+        public async Task<IActionResult> SendLike(int id)
+        {
+            var post = await _postService.GetByIdAsync(id);
+            var currentUser = await _userManager.GetUserAsync(HttpContext.User);
+            var likedPosts = await _likedPostService.GetAllAsync();
+            if (post != null)
+            {
+                var likedPost = likedPosts.FirstOrDefault(l => l.UserId == currentUser.Id && l.PostId == post.Id);
+
+                if (likedPost == null)
+                {
+                    post.LikeCount += 1;
+                    await _postService.UpdateAsync(post);
+
+                    var newLikedPost = new LikedPost()
+                    {
+                        PostId = post.Id,
+                        Post = post,
+                        UserId = currentUser.Id,
+                        User = currentUser
+                    };
+
+                    await _likedPostService.AddAsync(newLikedPost);
+                }
+                else
+                {
+                    post.LikeCount -= 1;
+                    await _postService.UpdateAsync(post);
+                    await _likedPostService.DeleteAsync(likedPost);
+                }
+
+
+            }
+
+            return Ok();
+        }
+
+        public async Task<IActionResult> SendCommentLike(int id)
+        {
+            var comment = await _commentService.GetByIdAsync(id);
+            var currentUser = await _userManager.GetUserAsync(HttpContext.User);
+            var likedComments = await _likedCommentService.GetAllAsync();
+            if (comment != null)
+            {
+                var likedComment = likedComments.FirstOrDefault(l => l.UserId == currentUser.Id && l.CommentId == comment.Id);
+
+                if (likedComment == null)
+                {
+                    comment.LikeCount += 1;
+                    await _commentService.UpdateAsync(comment);
+
+                    var newLikedComment = new LikedComment()
+                    {
+                        CommentId = comment.Id,
+                        Comment = comment,
+                        UserId = currentUser.Id,
+                        User = currentUser
+                    };
+
+                    await _likedCommentService.AddAsync(newLikedComment);
+                }
+                else
+                {
+                    comment.LikeCount -= 1;
+                    await _commentService.UpdateAsync(comment);
+                    await _likedCommentService.DeleteAsync(likedComment);
+                }
+
+
+            }
+
+            return Ok();
+        }
+        public async Task<IActionResult> SharePost(string text)
+        {
+            var sender = await _userManager.GetUserAsync(HttpContext.User);
+
+            var notification = new Notification
+            {
+                Content = $"{sender.UserName} share a new post at {DateTime.Now.ToLongDateString()}",
+                UserId = sender.Id,
+                User = sender,
+                Status = "Notification",
+                Date = DateTime.Now,
+
+            };
+
+            var post = new Post
+            {
+                Text = text,
+                ShareDate = DateTime.Now,
+                SenderId = sender.Id,
+                Sender = sender,
+                ImagePath = "",
+                LikeCount = 0,
+                CommentCount = 0,
+                Comments = new List<Comment>()
+            };
+
+            await _notificationService.AddAsync(notification);
+            await _postService.AddAsync(post);
+
+            return Ok();
+        }
+
         [HttpDelete]
         public async Task<IActionResult> TakeRequest(string id)
         {
@@ -157,6 +275,39 @@ namespace Zust.WebUI.Controllers
 
             return Ok(requests);
         }
+
+        public async Task<IActionResult> GetAllNotification()
+        {
+            var allNotifications = await _notificationService.GetAllAsync();
+            var current = await _userManager.GetUserAsync(HttpContext.User);
+            var allFriends = await _friendService.GetAllAsync();
+            var friendNotifications = allNotifications.Where(n => allFriends.All(f => f.OwnId == n.UserId)).ToList();
+
+            var friends = allFriends
+            .Where(f => f.OwnId == current.Id || f.YourFriendId == current.Id)
+            .ToList();
+
+            // Arkada?lara ait olan bildirimleri getir
+            var notifications = allNotifications
+            .Where(n =>
+                friends.Any(f =>
+                    (f.OwnId == current.Id && n.UserId == f.YourFriendId && n.Date > f.FriendDate) ||
+                    (f.YourFriendId == current.Id && n.UserId == f.OwnId && n.Date > f.FriendDate)
+                )
+            )
+            .ToList();
+
+            return Ok(new { notifications = notifications, currentId = current.Id });
+        }
+
+        //public async Task<IActionResult> GetAllPosts()
+        //{
+        //    var allPosts = await _postService.GetAllAsync();
+        //    var current = await _userManager.GetUserAsync(HttpContext.User);
+        //    //var notifications = allNotifications.Where(r => r.ReceiverId == current.Id);
+        //    //Task.Delay(1000);
+        //    return Ok(new { posts = allPosts, currentId = current.Id, currentImage = current.Image });
+        //}
 
         [HttpGet]
         public async Task<IActionResult> DeclineRequest(int id, string senderid)
@@ -213,6 +364,7 @@ namespace Zust.WebUI.Controllers
                 {
                     OwnId = sender.Id,
                     YourFriendId = receiverUser.Id,
+                    FriendDate = DateTime.Now,
                 });
 
                 await _userManager.UpdateAsync(receiverUser);
