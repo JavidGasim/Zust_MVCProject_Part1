@@ -25,8 +25,9 @@ namespace Zust.WebUI.Controllers
         private readonly ICommentService _commentService;
         private readonly ILikedPostService _likedPostService;
         private readonly ILikedCommentService _likedCommentService;
+        private readonly IMyNotificationService _myNotificationService;
 
-        public HomeController(ILogger<HomeController> logger, UserManager<CustomIdentityUser> userManager, ICustomIdentityUserService customIdentityUserService, IFriendService friendService, IFriendRequestService friendRequestService, IChatService chatService, IMessageService messageService, ZustDbContext context, INotificationService notificationService, IPostService postService, ICommentService commentService, ILikedPostService likedPostService, ILikedCommentService likedCommentService)
+        public HomeController(ILogger<HomeController> logger, UserManager<CustomIdentityUser> userManager, ICustomIdentityUserService customIdentityUserService, IFriendService friendService, IFriendRequestService friendRequestService, IChatService chatService, IMessageService messageService, ZustDbContext context, INotificationService notificationService, IPostService postService, ICommentService commentService, ILikedPostService likedPostService, ILikedCommentService likedCommentService, IMyNotificationService myNotificationService)
         {
             _logger = logger;
             _userManager = userManager;
@@ -41,6 +42,7 @@ namespace Zust.WebUI.Controllers
             _commentService = commentService;
             _likedPostService = likedPostService;
             _likedCommentService = likedCommentService;
+            _myNotificationService = myNotificationService;
         }
 
         public async Task<IActionResult> Index()
@@ -50,7 +52,6 @@ namespace Zust.WebUI.Controllers
 
             return View();
         }
-
         public async Task<IActionResult> GetAllUsersForLayout()
         {
             var user = await _userManager.GetUserAsync(HttpContext.User);
@@ -125,7 +126,8 @@ namespace Zust.WebUI.Controllers
         }
 
 
-        public async Task<IActionResult> SendComment(int id, string message)
+
+        public async Task<IActionResult> SendComment(int id, string message, string senderId)
         {
             var post = await _postService.GetByIdAsync(id);
             var user = await _userManager.GetUserAsync(HttpContext.User);
@@ -147,19 +149,35 @@ namespace Zust.WebUI.Controllers
                 await _commentService.AddAsync(comment);
             }
 
+            var receiverUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == senderId);
+            if (receiverUser != null)
+            {
+                await _myNotificationService.AddAsync(new MyNotification
+                {
+                    Content = $"{user.UserName} commented your post {DateTime.Now.ToLongDateString()}",
+                    SenderId = user.Id,
+                    Sender = user,
+                    ReceiverId = receiverUser.Id,
+                    Status = "Notification"
+                });
+
+            }
+
             return Ok();
         }
-        public async Task<IActionResult> SendLike(int id)
+        public async Task<IActionResult> SendLike(int id, string currentId)
         {
             var post = await _postService.GetByIdAsync(id);
             var currentUser = await _userManager.GetUserAsync(HttpContext.User);
             var likedPosts = await _likedPostService.GetAllAsync();
+            var message = "";
             if (post != null)
             {
                 var likedPost = likedPosts.FirstOrDefault(l => l.UserId == currentUser.Id && l.PostId == post.Id);
 
                 if (likedPost == null)
                 {
+                    message = "liked";
                     post.LikeCount += 1;
                     await _postService.UpdateAsync(post);
 
@@ -175,6 +193,7 @@ namespace Zust.WebUI.Controllers
                 }
                 else
                 {
+                    message = "disliked";
                     post.LikeCount -= 1;
                     await _postService.UpdateAsync(post);
                     await _likedPostService.DeleteAsync(likedPost);
@@ -183,20 +202,37 @@ namespace Zust.WebUI.Controllers
 
             }
 
+            var receiverUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == currentId);
+            if (receiverUser != null)
+            {
+                await _myNotificationService.AddAsync(new MyNotification
+                {
+                    Content = $"{currentUser.UserName} {message} your post {DateTime.Now.ToLongDateString()}",
+                    SenderId = currentUser.Id,
+                    Sender = currentUser,
+                    ReceiverId = receiverUser.Id,
+                    Status = "Notification"
+                });
+
+            }
+
             return Ok();
         }
 
-        public async Task<IActionResult> SendCommentLike(int id)
+        public async Task<IActionResult> SendCommentLike(int id, string senderId)
         {
             var comment = await _commentService.GetByIdAsync(id);
             var currentUser = await _userManager.GetUserAsync(HttpContext.User);
             var likedComments = await _likedCommentService.GetAllAsync();
+            string message = "";
             if (comment != null)
             {
                 var likedComment = likedComments.FirstOrDefault(l => l.UserId == currentUser.Id && l.CommentId == comment.Id);
 
                 if (likedComment == null)
                 {
+                    message = "liked";
+
                     comment.LikeCount += 1;
                     await _commentService.UpdateAsync(comment);
 
@@ -212,11 +248,27 @@ namespace Zust.WebUI.Controllers
                 }
                 else
                 {
+                    message = "disliked";
+
                     comment.LikeCount -= 1;
                     await _commentService.UpdateAsync(comment);
                     await _likedCommentService.DeleteAsync(likedComment);
                 }
 
+
+            }
+
+            var receiverUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == senderId);
+            if (receiverUser != null && receiverUser.Id != currentUser.Id)
+            {
+                await _myNotificationService.AddAsync(new MyNotification
+                {
+                    Content = $"{currentUser.UserName} {message} your post {DateTime.Now.ToLongDateString()}",
+                    SenderId = currentUser.Id,
+                    Sender = currentUser,
+                    ReceiverId = receiverUser.Id,
+                    Status = "Notification"
+                });
 
             }
 
@@ -276,6 +328,15 @@ namespace Zust.WebUI.Controllers
             return Ok(requests);
         }
 
+        public async Task<IActionResult> GetMyNotifications()
+        {
+            var current = await _userManager.GetUserAsync(HttpContext.User);
+            var myNotifications = await _myNotificationService.GetAllAsync();
+            var notifications = myNotifications.Where(r => r.ReceiverId == current.Id);
+
+            return Ok(notifications);
+        }
+
         public async Task<IActionResult> GetAllNotification()
         {
             var allNotifications = await _notificationService.GetAllAsync();
@@ -296,6 +357,19 @@ namespace Zust.WebUI.Controllers
                 )
             )
             .ToList();
+            //var friendUsers = datas
+            //.Where(u => myFriends.Any(f => f.OwnId == u.Id || f.YourFriendId == u.Id) && u.Id != user.Id)
+            //.Select(u => new CustomIdentityUser
+            //{
+            //    Id = u.Id,
+            //    IsOnline = u.IsOnline,
+            //    UserName = u.UserName,
+            //    Image = u.Image,
+            //    Email = u.Email
+            //})
+            //.ToList();
+            //var notifications = allNotifications.Where(r => r.ReceiverId == current.Id);
+            //Task.Delay(1000);
 
             return Ok(new { notifications = notifications, currentId = current.Id });
         }
@@ -398,6 +472,24 @@ namespace Zust.WebUI.Controllers
                 if (request == null) return NotFound();
 
                 await _friendRequestService.DeleteAsync(request);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteNotification(int id)
+        {
+            try
+            {
+                var myNotifications = await _myNotificationService.GetAllAsync();
+                var notification = myNotifications.FirstOrDefault(n => n.Id == id);
+                if (notification == null) return NotFound();
+
+                await _myNotificationService.DeleteAsync(notification);
                 return Ok();
             }
             catch (Exception ex)

@@ -55,6 +55,7 @@ function GetAllUsers() {
 GetAllUsers();
 GetMyRequests();
 GetNotifications();
+GetMyNotifications();
 function GetMessages(receiverId, senderId) {
     $.ajax({
         url: `/Message/GetAllMessages?receiverId=${receiverId}&senderId=${senderId}`,
@@ -65,13 +66,26 @@ function GetMessages(receiverId, senderId) {
                 let dateTime = new Date(data.messages[i].dateTime);
                 let hour = dateTime.getHours();
                 let minute = dateTime.getMinutes();
-                let item = `<section style="display:flex;margin-top:25px;border:2px solid black;
-margin-left:10px;border-radius:10px;background-color:lightgrey;min-width:20%;max-width:90%;">
+                let item = '';
+                if (data.messages[i].receiverId == data.currentUserId) {
+                    item = `<section style="display:flex;margin-top:25px;border:2px solid black;
+    margin-left:10px;border-radius:10px;background-color:lightgrey;min-width:20%;max-width:50%;">
 
-                                        <h5 style="margin-left:10px;margin-top:15px;margin-right:10px;font-size:1em;">${data.messages[i].content}</h5>
-                                        <p style="margin-top:20px;margin-right:10px;font-size:0.9em">${hour}:${minute}</p>
+                                            <h5 style="margin-left:10px;margin-top:15px;margin-right:10px;font-size:1em;">${data.messages[i].content}</h5>
+                                            <p style="margin-top:20px;margin-right:10px;font-size:0.9em">${hour}:${minute}</p>
                                         
-                                    </section>`;
+                                        </section>`;
+
+                }
+                else {
+                    item = `<section style="display:flex;margin-top:25px;border:2px solid black;
+    margin-left:50%;border-radius:10px;background-color:blue;min-width:20%;max-width:50%;">
+
+                                            <h5 style="margin-left:10px;margin-top:15px;margin-right:10px;font-size:1em;color:white">${data.messages[i].content}</h5>
+                                            <p style="margin-top:20px;margin-right:10px;font-size:0.9em;color:white">${hour}:${minute}</p>
+                                        
+                                        </section>`;
+                }
                 content += item;
             }
             console.log(data);
@@ -95,6 +109,8 @@ function SendMessage(receiverId, senderId) {
         success: function (data) {
             GetMessageCall(receiverId, senderId);
             content.value = "";
+            var audio = document.querySelector("#mySound");
+            audio.play();
         }
     })
 }
@@ -236,6 +252,38 @@ function GetMyRequests() {
         }
     });
 }
+
+function GetMyNotifications() {
+    $.ajax({
+        url: "/Home/GetMyNotifications",
+        method: "GET",
+        success: function (data) {
+            let content = '';
+            let subContent = '';
+            for (let i = 0; i < data.length; i++) {
+
+                subContent = `
+                    <div class="card-body">
+                        <button class="btn btn-warning" onclick="DeleteNotification(${data[i].id})">Delete</button>
+                    </div>`;
+
+                let item = `
+                <div class="card" style="width:100%;background-color:lightgrey;margin-top:50px;">
+                    <div class="card-body">
+                        <h5 style="color:red;">${data[i].status}</h5>
+                        <ul class="list-group list-group-flush">
+                            <li style="font-size:1em;list-style:none;">${data[i].content}</li>
+                        </ul>
+                        ${subContent}
+                    </div>
+                </div>`;
+
+                content += item;
+            }
+            $("#myNotifications").html(content);
+        }
+    });
+}
 function GetNotifications() {
     $.ajax({
         url: "/Home/GetAllNotification",
@@ -264,16 +312,16 @@ function GetNotifications() {
     });
 }
 
-function SendComment(id, e) {
+function SendComment(id, e, senderId) {
     e.preventDefault();
 
     let textArea = document.querySelector(`#message${id}`).value;
 
     $.ajax({
-        url: `/Home/SendComment?id=${id}&message=${textArea}`,
+        url: `/Home/SendComment?id=${id}&message=${textArea}&senderId=${senderId}`,
         method: "GET",
         success: function (data) {
-            //SharePostCall();
+            SendNotificationCall(senderId);
             GetAllPosts();
             GetMyPosts();
             GetAllPostsCall();
@@ -281,13 +329,13 @@ function SendComment(id, e) {
     });
 }
 
-function SendLike(id) {
+function SendLike(id, senderId) {
 
     $.ajax({
-        url: `/Home/SendLike/${id}`,
+        url: `/Home/SendLike?id=${id}&currentId=${senderId}`,
         method: "GET",
         success: function (data) {
-            //SharePostCall();
+            SendNotificationCall(senderId);
             GetAllPosts();
             GetMyPosts();
             GetAllPostsCall();
@@ -295,13 +343,13 @@ function SendLike(id) {
     });
 }
 
-function SendCommentLike(id) {
+function SendCommentLike(id, senderId) {
 
     $.ajax({
-        url: `/Home/SendCommentLike/${id}`,
+        url: `/Home/SendCommentLike?id=${id}&senderId=${senderId}`,
         method: "GET",
         success: function (data) {
-            //SharePostCall();
+            SendNotificationCall(senderId);
             GetAllPosts();
             GetMyPosts();
             GetAllPostsCall();
@@ -318,10 +366,6 @@ function GetAllPosts() {
 
             for (let i = 0; i < data.posts.length; i++) {
 
-                //subContent = `
-                //    <div class="card-body">
-                //        <button class="btn btn-warning" onclick="DeleteRequest(${data[i].id})">Delete</button>
-                //    </div>`;
                 let subContent = '';
                 let likeContent = '<i class="fa-regular fa-thumbs-up"></i>';
 
@@ -365,7 +409,7 @@ function GetAllPosts() {
                                         <p>${comment.content}</p>
                                         
                                     </div>
-                                    <div class="post-react" onclick="SendCommentLike(${comment.id})">
+                                    <div class="post-react" onclick="SendCommentLike(${comment.id},'${comment.senderId}')">
                                         <div>${likeContent2}<span style="margin-left:5px;">Like</span> <span style="margin-left:5px;" class="number">${comment.likeCount}</span></div>
 
                                     </div>
@@ -414,7 +458,7 @@ function GetAllPosts() {
                             
                             
                             <ul class="post-meta-wrap d-flex justify-content-between align-items-center" style="padding:30px;list-style:none;">
-                                <li class="post-react" onclick="SendLike(${data.posts[i].id})">
+                                <li class="post-react" onclick="SendLike(${data.posts[i].id},'${data.posts[i].senderId}')">
                                     <div>${likeContent}<span style="margin-left:5px;">Like</span> <span style="margin-left:5px;" class="number">${data.posts[i].likeCount}</span></div>
 
                                 </li>
@@ -435,17 +479,12 @@ function GetAllPosts() {
                                 <div class="form-group" style="display:flex;justify-content:start;width:98%;margin-left:3%">
                                     <textarea style="width:80%%;" id="message${data.posts[i].id}" name="message" class="form-control" placeholder="Write a comment..."></textarea>
                       
-                                    <button type="submit" style="width:15%;background-color:red;color:white;font-size:1em;margin-left:20px;" onclick="SendComment(${data.posts[i].id},event)">Send</button>
+                                    <button type="submit" style="width:15%;background-color:red;color:white;font-size:1em;margin-left:20px;" onclick="SendComment(${data.posts[i].id},event,'${data.posts[i].senderId}')">Send</button>
                                 </div>
                             </form>
                         </div>
                     </div>`;
                     content += item;
-                    //317 share image part
-                    //<div class="post-image">
-                    //    <img src="assets/images/news-feed-post/post-4.jpg" alt="image">
-                    //</div>
-
                 }
 
             }
@@ -464,10 +503,6 @@ function GetAllPosts2() {
 
             for (let i = 0; i < data.posts.length; i++) {
 
-                //subContent = `
-                //    <div class="card-body">
-                //        <button class="btn btn-warning" onclick="DeleteRequest(${data[i].id})">Delete</button>
-                //    </div>`;
                 let subContent = '';
                 let likeContent = '<i class="fa-regular fa-thumbs-up"></i>';
 
@@ -510,7 +545,7 @@ function GetAllPosts2() {
                                         <p>${comment.content}</p>
                                         
                                     </div>
-                                    <div class="post-react" onclick="SendCommentLike(${comment.id})">
+                                    <div class="post-react" onclick="SendCommentLike(${comment.id},'${comment.senderId}')">
                                         <div>${likeContent2}<span style="margin-left:5px;">Like</span> <span style="margin-left:5px;" class="number">${comment.likeCount}</span></div>
 
                                     </div>
@@ -557,7 +592,7 @@ function GetAllPosts2() {
                             
                             
                             <ul class="post-meta-wrap d-flex justify-content-between align-items-center" style="padding:30px;list-style:none;">
-                                <li class="post-react" onclick="SendLike(${data.posts[i].id})">
+                                <li class="post-react" onclick="SendLike(${data.posts[i].id},'${data.posts[i].senderId}')">
                                     <div>${likeContent}<span style="margin-left:5px;">Like</span> <span style="margin-left:5px;" class="number">${data.posts[i].likeCount}</span></div>
 
                                 </li>
@@ -578,16 +613,12 @@ function GetAllPosts2() {
                                 <div class="form-group" style="display:flex;justify-content:start;width:98%;margin-left:3%">
                                     <textarea style="width:80%%;" id="message${data.posts[i].id}" name="message" class="form-control" placeholder="Write a comment..."></textarea>
                       
-                                    <button type="submit" style="width:15%;background-color:red;color:white;font-size:1em;margin-left:20px;" onclick="SendComment(${data.posts[i].id},event)">Send</button>
+                                    <button type="submit" style="width:15%;background-color:red;color:white;font-size:1em;margin-left:20px;" onclick="SendComment(${data.posts[i].id},event,'${data.posts[i].senderId}')">Send</button>
                                 </div>
                             </form>
                         </div>
                     </div>`;
                     content += item;
-                    //317 share image part
-                    //<div class="post-image">
-                    //    <img src="assets/images/news-feed-post/post-4.jpg" alt="image">
-                    //</div>
 
                 }
 
@@ -664,7 +695,7 @@ function GetMyPosts() {
                                         <p>${comment.content}</p>
                                         
                                     </div>
-                                    <div class="post-react" onclick="SendCommentLike(${comment.id})">
+                                    <div class="post-react" onclick="SendCommentLike(${comment.id},'${comment.senderId}')">
                                         <div>${likeContent2}<span style="margin-left:5px;">Like</span> <span style="margin-left:5px;" class="number">${comment.likeCount}</span></div>
 
                                     </div>
@@ -729,11 +760,6 @@ function GetMyPosts() {
                         </div>
                     </div>`;
                 content += item;
-                //317 share image part
-                //<div class="post-image">
-                //    <img src="assets/images/news-feed-post/post-4.jpg" alt="image">
-                //</div>
-
 
 
             }
@@ -791,7 +817,7 @@ function GetMyPosts2() {
                                         <p>${comment.content}</p>
                                         
                                     </div>
-                                    <div class="post-react" onclick="SendCommentLike(${comment.id})">
+                                    <div class="post-react" onclick="SendCommentLike(${comment.id},'${comment.senderId}')">
                                         <div>${likeContent2}<span style="margin-left:5px;">Like</span> <span style="margin-left:5px;" class="number">${comment.likeCount}</span></div>
 
                                     </div>
@@ -856,10 +882,6 @@ function GetMyPosts2() {
                         </div>
                     </div>`;
                 content += item;
-                //317 share image part
-                //<div class="post-image">
-                //    <img src="assets/images/news-feed-post/post-4.jpg" alt="image">
-                //</div>
 
 
 
@@ -878,7 +900,6 @@ function GetMyPosts2() {
     });
 }
 function DeclineRequest(id, senderId) {
-    //window.location.href = '/Notification/Index';
 
     $.ajax({
         url: `/Home/DeclineRequest?id=${id}&senderId=${senderId}`,
@@ -900,7 +921,6 @@ function DeclineRequest(id, senderId) {
 }
 
 function AcceptRequest(id, id2, requestId) {
-    //window.location.href = '/Notification/Index';
     $.ajax({
         url: `/Home/AcceptRequest?userId=${id}&senderId=${id2}&requestId=${requestId}`,
         method: "GET",
@@ -908,9 +928,6 @@ function AcceptRequest(id, id2, requestId) {
 
             SendFollowCall(id);
             SendFollowCall(id2);
-            //GetAllUsers();
-            //GetMyRequests();
-            //GetAllFriends();
         }
     });
 }
@@ -920,7 +937,16 @@ function DeleteRequest(id) {
         method: "DELETE",
         success: function (data) {
             GetMyRequests();
-            //GetAllNotifications();
+        }
+    });
+}
+
+function DeleteNotification(id) {
+    $.ajax({
+        url: `/Home/DeleteNotification/${id}`,
+        method: "DELETE",
+        success: function (data) {
+            GetMyNotifications();
         }
     });
 }
@@ -934,8 +960,6 @@ function UnfollowUser(id) {
             UnFollowUserCall(id);
             GetAllUsers();
             GetAllFriends();
-            //window.location.href = '/Message/GoChat';
-            //GetAllNotifications();
         }
     });
 }

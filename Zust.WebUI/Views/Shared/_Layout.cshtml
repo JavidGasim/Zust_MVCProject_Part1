@@ -3,11 +3,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SocialNetwork.WebUI</title>
+    <title>@ViewData["Title"] - Zust</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/SocialNetwork.WebUI.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Zust.WebUI.styles.css" asp-append-version="true" /> 
 
     <link rel="stylesheet" href="~/css/bootsrap.min.css" />
     <link rel="stylesheet" href="~/css/animate.min.css">
@@ -72,11 +72,11 @@
 
                         <div class="others-options d-flex align-items-center">
                             <div class="option-item">
-                                <a href="index.html" class="home-btn"><i class="flaticon-home"></i></a>
+                                <a href="/Home/Index" class="home-btn"><i class="flaticon-home"></i></a>
                             </div>
                             <div class="option-item">
                                 <div class="dropdown friend-requests-nav-item">
-                                    <a href="#" class="dropdown-bs-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <a href="/Friend/Index" class="dropdown-bs-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <div class="friend-requests-btn">
                                             <i class="flaticon-user"></i>
                                             <span>3</span>
@@ -227,7 +227,7 @@
                                                 </div>
                                             </div>
                                             <div class="view-all-requests-btn">
-                                                <a href="friend.html" class="default-btn">View All Requests</a>
+                                                <a href="/Friends/Index" class="default-btn">View All Requests</a>
                                             </div>
                                         </div>
                                     </div>
@@ -235,7 +235,7 @@
                             </div>
                             <div class="option-item">
                                 <div class="dropdown messages-nav-item">
-                                    <a href="#" class="dropdown-bs-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <a href="/Message/GoChat" class="dropdown-bs-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <div class="messages-btn">
                                             <i class="flaticon-email"></i>
                                             <span>2</span>
@@ -327,7 +327,7 @@
                                                 </div>
                                             </div>
                                             <div class="view-all-messages-btn">
-                                                <a href="messages.html" class="default-btn">View All Messages</a>
+                                                <a href="/Message/GoChat" class="default-btn">View All Messages</a>
                                             </div>
                                         </div>
                                     </div>
@@ -335,7 +335,7 @@
                             </div>
                             <div class="option-item">
                                 <div class="dropdown notifications-nav-item">
-                                    <a href="#" class="dropdown-bs-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <a href="/Notification/Index" class="dropdown-bs-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <div class="notifications-btn">
                                             <i class="flaticon-bell"></i>
                                             <span>1</span>
@@ -409,7 +409,7 @@
                                                 </div>
                                             </div>
                                             <div class="view-all-notifications-btn">
-                                                <a href="notifications.html" class="default-btn">View All Notifications</a>
+                                                <a href="/Notification/Index" class="default-btn">View All Notifications</a>
                                             </div>
                                         </div>
                                     </div>
@@ -439,13 +439,16 @@
                             </div>
                             <div class="option-item">
                                 <div class="dropdown profile-nav-item">
-                                    <a href="#" class="dropdown-bs-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <div class="menu-profile">
-                                            <img src="/images/user-1.jpg" class="rounded-circle" alt="image">
-                                            <span class="name">Matthew</span>
-                                            <span class="status-online"></span>
-                                        </div>
-                                    </a>
+                                    @await Component.InvokeAsync("CurrentUser")
+
+                                    @* <a href="#" class="dropdown-bs-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <div class="menu-profile">
+                                    @* //-------------------------------------------------------------------------------------------------------------------------- *@
+                                    @* <img src="/images/user-1.jpg" class="rounded-circle" alt="image">
+                                    <span class="name">Matthew</span>
+                                    <span class="status-online"></span>
+                                    </div> *@
+                                    @* </a> *@
 
                                     <div class="dropdown-menu">
                                         <div class="profile-header">
@@ -568,7 +571,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="view-all-requests-btn">
-                                                    <a href="friend.html" class="default-btn">View All Requests</a>
+                                                    <a href="friends.html" class="default-btn">View All Requests</a>
                                                 </div>
                                             </div>
                                         </div>

@@ -25,6 +25,8 @@ namespace Zust.DataAccess.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<LikedPost> LikedPosts { get; set; }
         public DbSet<LikedComment> LikedComments { get; set; }
+        public DbSet<MyNotification> MyNotifications { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             //base.OnConfiguring(optionsBuilder);
