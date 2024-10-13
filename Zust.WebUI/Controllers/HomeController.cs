@@ -357,31 +357,10 @@ namespace Zust.WebUI.Controllers
                 )
             )
             .ToList();
-            //var friendUsers = datas
-            //.Where(u => myFriends.Any(f => f.OwnId == u.Id || f.YourFriendId == u.Id) && u.Id != user.Id)
-            //.Select(u => new CustomIdentityUser
-            //{
-            //    Id = u.Id,
-            //    IsOnline = u.IsOnline,
-            //    UserName = u.UserName,
-            //    Image = u.Image,
-            //    Email = u.Email
-            //})
-            //.ToList();
-            //var notifications = allNotifications.Where(r => r.ReceiverId == current.Id);
-            //Task.Delay(1000);
 
             return Ok(new { notifications = notifications, currentId = current.Id });
         }
 
-        //public async Task<IActionResult> GetAllPosts()
-        //{
-        //    var allPosts = await _postService.GetAllAsync();
-        //    var current = await _userManager.GetUserAsync(HttpContext.User);
-        //    //var notifications = allNotifications.Where(r => r.ReceiverId == current.Id);
-        //    //Task.Delay(1000);
-        //    return Ok(new { posts = allPosts, currentId = current.Id, currentImage = current.Image });
-        //}
 
         [HttpGet]
         public async Task<IActionResult> DeclineRequest(int id, string senderid)

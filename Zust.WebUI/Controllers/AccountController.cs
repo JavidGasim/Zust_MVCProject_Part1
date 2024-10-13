@@ -25,11 +25,6 @@ namespace Zust.WebUI.Controllers
         }
 
 
-        // GET: AuthController
-        //public ActionResult Index()
-        //{
-        //    return View();
-        //}
 
         [HttpGet]
         public ActionResult Login()
@@ -66,7 +61,6 @@ namespace Zust.WebUI.Controllers
         [HttpGet]
         public ActionResult Register()
         {
-            //var model = new RegisterViewModel();
             return View();
         }
 
